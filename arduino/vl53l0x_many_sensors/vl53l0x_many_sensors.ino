@@ -30,8 +30,6 @@ typedef enum {
 
 #define foreach(SENSORS_NUM, iter) for(uint8_t iter = 0; iter < SENSORS_NUM; iter++)
 
-Adafruit_VL53L0X sensors[SENSORS_NUM];
-
 sht_lox_pins_e shut_pins[SENSORS_NUM] = {
   [0] = SHT_LOX_SENSOR24_345_DEG,
   [1] = SHT_LOX_SENSOR1_0_DEG,
@@ -59,15 +57,21 @@ sht_lox_pins_e shut_pins[SENSORS_NUM] = {
   [23] = SHT_LOX_SENSOR23_330_DEG
 };
 
+struct sensors {
+  Adafruit_VL53L0X sensors[SENSORS_NUM];
+  uint32_t magic_number;
+} __attribute__((packed)) sensors_s;
+
 // Accounting
 double volume = 0.0f;
 float prev_scans[SENSORS_NUM];
 float new_scans[SENSORS_NUM];
+const uint32_t magic_number = 0x9F8A32F1;
 
 void initSensors()
 {
   foreach(SENSORS_NUM, iter) {
-    sensors[iter] = Adafruit_VL53L0X();
+    sensors_s.sensors[iter] = Adafruit_VL53L0X();
   }
 }
 
@@ -89,7 +93,12 @@ void setID() {
   foreach(SENSORS_NUM, iter) {
     digitalWrite(shut_pins[iter], HIGH);
     delay(100);
-    if(!sensors[iter].begin(LOX_START_ADDRESS + iter)) {
+    if (sensors_s.magic_number != magic_number) {
+      Serial.println("Memory overwrite");
+      while(1);
+    }
+
+    if(!sensors_s.sensors[iter].begin(LOX_START_ADDRESS + iter)) {
       Serial.print("Failed to boot VL53L0X #");
       Serial.println(iter);
       delay(100);
@@ -101,8 +110,8 @@ void setID() {
 
 void setupSensors() {
   foreach(SENSORS_NUM, iter) {
-    sensors[iter].setMeasurementTimingBudgetMicroSeconds(1);
-    sensors[iter].startRangeContinuous(1);
+    sensors_s.sensors[iter].setMeasurementTimingBudgetMicroSeconds(1);
+    sensors_s.sensors[iter].startRangeContinuous(1);
     delay(100);
   }
 }
@@ -149,6 +158,9 @@ void accumulate_volume(float* prev_scans, float* new_scans) {
 }
 
 void setup() {
+
+  sensors_s.magic_number = magic_number;
+
   Serial.begin(115200);
 
   // wait until serial port opens for native USB devices
@@ -181,7 +193,7 @@ void loop() {
     memcpy(&prev_scans[0], &new_scans[0], SENSORS_NUM); // prev = new
 
     foreach(SENSORS_NUM, iter) {
-      new_scans[iter] = RING_RADIUS - ((float)sensors[iter].readRangeResult())/1000;
+      new_scans[iter] = RING_RADIUS - ((float)sensors_s.sensors[iter].readRangeResult())/1000;
     }
     accumulate_volume(&prev_scans[0], &new_scans[0]);
   }
