@@ -1,7 +1,7 @@
 #include "Adafruit_VL53L0X.h"
 
 #define RING_RADIUS 0.243f // [m]
-#define SENSORS_NUM 2u
+#define SENSORS_NUM 12u
 #define LOX_START_ADDRESS 0x29
 #define SCAN_LENGTH 0.01f
 #define ALPHA (TWO_PI / SENSORS_NUM)
@@ -24,22 +24,22 @@ typedef enum {
 } sht_lox_pins_e;
 
 typedef enum {
-    SYNC_PIN_OUT = 8
+    SYNC_PIN_OUT = 10
 } sync_pins_e;
 
 sht_lox_pins_e shut_pins[SENSORS_NUM] = {
    [0] = SHT_LOX_SENSOR1_0_DEG,
    [1] = SHT_LOX_SENSOR2_15_DEG,
-  //  [2] = SHT_LOX_SENSOR3_30_DEG,
-  //  [3] = SHT_LOX_SENSOR4_45_DEG,
-  //  [4] = SHT_LOX_SENSOR5_60_DEG,
-  //  [5] = SHT_LOX_SENSOR6_75_DEG,
-  //  [6] = SHT_LOX_SENSOR7_90_DEG,
-  //  [7] = SHT_LOX_SENSOR8_105_DEG,
-  //  [8] = SHT_LOX_SENSOR9_120_DEG,
-  //  [9] = SHT_LOX_SENSOR10_135_DEG,
-  //  [10] = SHT_LOX_SENSOR11_150_DEG,
-  //  [11] = SHT_LOX_SENSOR12_165_DEG
+   [2] = SHT_LOX_SENSOR3_30_DEG,
+   [3] = SHT_LOX_SENSOR4_45_DEG,
+   [4] = SHT_LOX_SENSOR5_60_DEG,
+   [5] = SHT_LOX_SENSOR6_75_DEG,
+   [6] = SHT_LOX_SENSOR7_90_DEG,
+   [7] = SHT_LOX_SENSOR8_105_DEG,
+   [8] = SHT_LOX_SENSOR9_120_DEG,
+   [9] = SHT_LOX_SENSOR10_135_DEG,
+   [10] = SHT_LOX_SENSOR11_150_DEG,
+   [11] = SHT_LOX_SENSOR12_165_DEG
 };
 
 
@@ -88,6 +88,7 @@ void setID() {
 void setupSensors() {
   foreach(SENSORS_NUM, iter) {
     sensors_s.sensors[iter].setMeasurementTimingBudgetMicroSeconds(1);
+    delay(10);
     sensors_s.sensors[iter].startRangeContinuous(1);
     delay(10);
   }
@@ -118,7 +119,9 @@ void setup() {
   digitalWrite(SYNC_PIN_OUT, HIGH);
 
   setID();
+  delay(50);
   setupSensors();
+  delay(50);
   memset(&scans_s.scans[0], 0, SENSORS_NUM);
 
   digitalWrite(SYNC_PIN_OUT, LOW);
@@ -127,33 +130,31 @@ void setup() {
 
 void loop() {
 
-  foreach(SENSORS_NUM, iter) {
-    scans_s.scans[iter] = 29; //sensors_s.sensors[iter].readRangeResult();
+  for(uint8_t iter = 0; iter < SENSORS_NUM; iter++) {
+    scans_s.scans[iter] = sensors_s.sensors[iter].readRangeResult();
   }
 
-  const uint8_t data_length = SENSORS_NUM*sizeof(scans_s.scans[0]); // 4
-  const uint8_t packet_length = data_length + sizeof(scans_s.starting_time) + 3; // 4 + 4 + 3 = 11
+  const uint8_t data_length = SENSORS_NUM*sizeof(scans_s.scans[0]);
+  const uint8_t packet_length = data_length + sizeof(scans_s.starting_time) + 3; // packet_length, sensors_num and CRC
   uint8_t tx[packet_length + 2]; // 11 + 2 = 13
   tx[0] = 0xFF;
   tx[1] = 0xFF;
   tx[2] = packet_length;
   tx[3] = SENSORS_NUM;
   for(uint8_t i = 0; i < SENSORS_NUM; i++) {
-    tx[4+2*i] = scans_s.scans[i] & 0xFF;
-    tx[4+2*i+1] = (scans_s.scans[i] >> 8) & 0xFF;
+    for (size_t s = 0; s < sizeof(scans_s.scans[0]); s++) {
+      tx[4+2*i+s] = (scans_s.scans[i] >> s*8) & 0xFF;
+    }
   }
   uint32_t delta = millis() - scans_s.starting_time;
-  tx[4+data_length] = delta & 0xFF;
-  tx[5+data_length] = (delta >> 8) & 0xFF;
-  tx[6+data_length] = (delta >> 16) & 0xFF;
-  tx[7+data_length] = (delta >> 24) & 0xFF;
+  for (size_t s = 0; s < sizeof(scans_s.starting_time); s++) {
+    tx[4+data_length+s] = (delta >> s*8) & 0xFF;
+  }
   uint16_t check_sum = 0x00;
   for (uint8_t ind = 2; ind < packet_length+1; ++ind) {
-          check_sum += tx[ind];
+    check_sum += tx[ind];
   }
   tx[8+data_length] = (uint8_t)((~check_sum) & 0xff);
-
   send_data(&tx[0], sizeof(tx));
 
-  delay(2000);  
 }

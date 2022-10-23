@@ -2,7 +2,7 @@
 
 #define RING_RADIUS 0.243f // [m]
 #define SENSORS_NUM 12u
-#define LOX_START_ADDRESS 0x29
+#define LOX_START_ADDRESS 0x30
 #define SCAN_LENGTH 0.01f
 #define ALPHA (TWO_PI / SENSORS_NUM)
 
@@ -24,7 +24,7 @@ typedef enum {
 } sht_lox_pins_e;
 
 typedef enum {
-    SYNC_PIN_IN = 8
+    SYNC_PIN_IN = 10
 } sync_pins_e;
 
 sht_lox_pins_e shut_pins[SENSORS_NUM] = {
@@ -118,6 +118,7 @@ void setup() {
 
   setID();
   setupSensors();
+  delay(50);
   memset(&scans_s.scans[0], 0, SENSORS_NUM);
 
   while (digitalRead(SYNC_PIN_IN) == HIGH) {
@@ -126,10 +127,10 @@ void setup() {
 
   scans_s.starting_time = millis();
 }
-int a = 1;
+
 void loop() {
 
-  foreach(SENSORS_NUM, iter) {
+  for(uint8_t iter = 0; iter < SENSORS_NUM; iter++) {
     scans_s.scans[iter] = sensors_s.sensors[iter].readRangeResult();
   }
 
