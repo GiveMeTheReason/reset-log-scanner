@@ -28,14 +28,14 @@ for filename in FILENAMES:
         period = float(file.readline().strip())
         scans = int(file.readline().strip())
 
-        l = speed * period
+        length = speed * period
 
-        points_scans = [[0] * sensors for _ in range(scans)]
+        points_scans = [[0.] * sensors for _ in range(scans)]
 
         for i in range(scans):
             scan = list(map(float, file.readline().strip().split()))
             points_scans[i] = scan
 
-    volume = calculate_volume(points_scans, l, alpha, is_radians=False)
+    volume = calculate_volume(points_scans, length, alpha, is_radians=False)
 
     print(filename, volume)
