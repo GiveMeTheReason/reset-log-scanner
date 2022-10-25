@@ -1,7 +1,7 @@
 from collections import deque
 from time import sleep
 
-from python.parser.serial import Ring
+from python.parser.serial_read import Ring
 from python.parser.invert_measurements import invert
 from python.filter.interpolate_slice import interpolate_slice
 from python.model.volume import calculate_volume
@@ -35,7 +35,7 @@ left_ts = 0
 
 
 def initialization():
-    sleep(1)
+    sleep(5)
     left_half_master.process()
     right_half_slave.process()
     print("Scanning starts!")
