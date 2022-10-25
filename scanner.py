@@ -5,12 +5,12 @@ from python.parser.serial_read import Ring
 from python.parser.invert_measurements import invert
 from python.filter.interpolate_slice import interpolate_slice
 from python.model.volume import calculate_volume
-# from python.blender_vis.main import create_log
+from python.blender_vis.main import create_log
 
 
 # Change your usb name here (ex. /dev/ttyUSB0) /dev/ttyACM1 COM6
-LEFT_PORT_MASTER = 'COM4'
-RIGHT_PORT_SLAVE = 'COM3'
+LEFT_PORT_MASTER = '/dev/ttyACM0'
+RIGHT_PORT_SLAVE = '/dev/ttyACM1'
 BAUD_RATE = 115200
 
 # all measuremets are in millimetres
@@ -28,8 +28,8 @@ right_half_slave = Ring(port=RIGHT_PORT_SLAVE, baud=BAUD_RATE, timeout=0.1)
 left_buf = deque()
 right_buf = deque()
 
-data: list[list[float]] = []
-delta_ts: list[float] = []
+data: list = []
+delta_ts: list = []
 prev_ts = 0
 left_ts = 0
 
@@ -87,16 +87,23 @@ def main():
                 is_radians=False) * 1e-12
             if volume > 1e-6:
                 print(f'Volume: {volume}')
+                with open("/home/s/Desktop/skoltech/design_factory/design_factory/python/blender_vis/data/groundtruth.txt", "w") as file:
+                    for item in data:
+                        file.write(' '.join(str(k) for k in item))
+                        file.write('\n')
+                with open("/home/s/Desktop/skoltech/design_factory/design_factory/python/blender_vis/data/groundtruth_len.txt", "w") as file:
+                    file.write(' '.join(str(k) for k in lenght))
+                
+                # draw vizualization
+                # create_log(
+                #     data,
+                #     SENSOR_NUMBER,
+                #     lenght
+                # )
+                exit()
             data.clear()
             delta_ts.clear()
             prev_ts = left_ts
-
-            # draw vizualization
-            # create_log(
-            #     data,
-            #     SENSOR_NUMBER,
-            #     lenght
-            # )
 
         # check if new data
         if left_ts > prev_ts:

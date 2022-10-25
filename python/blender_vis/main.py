@@ -1,5 +1,5 @@
 import math
-# import numpy as np
+import numpy as np
 
 import bpy
 
@@ -33,11 +33,12 @@ def create_log(data, num_of_sensors, lenght):
     for layer_num, item in enumerate(data):
         for i, dist in enumerate(item):
             x = lenght[layer_num] * layer_num
-            y = dist * math.sin(deg2rad(15 + 30 * i))
-            z = dist * math.cos(deg2rad(15 + 30 * i))
+            y = dist * math.sin(deg2rad(15 + 15 * i))
+            z = dist * math.cos(deg2rad(15 + 15 * i))
             verts.append([x, y, z])
 
-    faces = list(range(0, num_of_sensors))
+    faces = []
+    faces.append(list(range(0, num_of_sensors)))
     for i in range(len(verts) - 1):
         current_point_id = i
         next_point_id = current_point_id + 1
@@ -62,8 +63,7 @@ def create_log(data, num_of_sensors, lenght):
     add_mesh("points", verts, faces)
 
 
-# data = np.loadtxt("/home/s/Desktop/skoltech/design_factory/blender_vis/data/groundtruth.txt")
-# num_of_sensors = 24
-# vel = 1
-# period = 0.1
-# create_log(data, num_of_sensors, vel, period)
+data = np.loadtxt("/home/s/Desktop/skoltech/design_factory/design_factory/python/blender_vis/data/groundtruth.txt")
+length = np.loadtxt("/home/s/Desktop/skoltech/design_factory/design_factory/python/blender_vis/data/groundtruth_len.txt")
+num_of_sensors = 24
+create_log(data, num_of_sensors, length)

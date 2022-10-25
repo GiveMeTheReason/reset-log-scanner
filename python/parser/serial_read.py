@@ -14,7 +14,7 @@ class Ring:
     def close(self):
         self._serial.close()
 
-    def process(self) -> list[list[float]]:
+    def process(self):
         self.measurements = [[]]
         self._buf += self._serial.read(self._serial.in_waiting)
 

@@ -1,8 +1,8 @@
 def invert(
-    scan: list[float],
+    scan: list,
     radius: float,
-    limits: list[float]
-) -> list[float | None]:
+    limits: list
+) -> list:
     inverted = [radius - measurement if
                 (limits[0] <= radius - measurement <= limits[1])
                 else None for measurement in scan]

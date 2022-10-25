@@ -2,8 +2,8 @@ import math
 
 
 def calculate_volume(
-    points_scans: list[list[float]],
-    length: float | list[float],
+    points_scans: list,
+    length: float,
     alpha: float = 15,
     is_radians: bool = False
 ) -> float:

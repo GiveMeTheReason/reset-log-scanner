@@ -1,7 +1,7 @@
 from itertools import chain
 
 
-def interpolate(first: float, last: float, length: int) -> list[float]:
+def interpolate(first: float, last: float, length: int) -> list:
     """Interpolates values from start to end over length
 
     Args:
@@ -18,7 +18,7 @@ def interpolate(first: float, last: float, length: int) -> list[float]:
     return interpolated
 
 
-def interpolate_slice(scan: list[float | None]) -> list[float]:
+def interpolate_slice(scan: list) -> list:
     """Filters None values by linearinterpolation in one round scan
 
     Args:
