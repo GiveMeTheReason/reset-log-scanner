@@ -1,5 +1,5 @@
 import math
-import numpy as np
+# import numpy as np
 
 import bpy
 
@@ -27,12 +27,12 @@ def add_mesh(name, verts, faces=None, edges=None, col_name="Collection"):
     mesh.from_pydata(verts, edges, faces)
 
 
-def create_log(data, num_of_sensors, vel, period):
+def create_log(data, num_of_sensors, lenght):
     layer_num = 0
     verts = []
     for layer_num, item in enumerate(data):
         for i, dist in enumerate(item):
-            x = vel * period * layer_num
+            x = lenght[layer_num] * layer_num
             y = dist * math.sin(deg2rad(15 + 30 * i))
             z = dist * math.cos(deg2rad(15 + 30 * i))
             verts.append([x, y, z])
@@ -62,8 +62,8 @@ def create_log(data, num_of_sensors, vel, period):
     add_mesh("points", verts, faces)
 
 
-data = np.loadtxt("/home/s/Desktop/skoltech/design_factory/blender_vis/data/groundtruth.txt")
-num_of_sensors = 24
-vel = 1
-period = 0.1
-create_log(data, num_of_sensors, vel, period)
+# data = np.loadtxt("/home/s/Desktop/skoltech/design_factory/blender_vis/data/groundtruth.txt")
+# num_of_sensors = 24
+# vel = 1
+# period = 0.1
+# create_log(data, num_of_sensors, vel, period)

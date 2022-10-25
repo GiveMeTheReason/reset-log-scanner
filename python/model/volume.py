@@ -1,17 +1,16 @@
-import typing as tp
 import math
 
 
 def calculate_volume(
     points_scans: list[list[float]],
-    length: tp.Union[float, list],
-    alpha: float = 30,
+    length: float | list[float],
+    alpha: float = 15,
     is_radians: bool = False
 ) -> float:
     """
     points: list [plane, scans]
     length: length between planes
-    alpha: angle between sensors (default: 30)
+    alpha: angle between sensors (default: 15)
     is_radians: if alpha provided in radians (default: False)
     """
     volume = 0.0

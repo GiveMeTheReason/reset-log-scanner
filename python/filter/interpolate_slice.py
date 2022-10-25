@@ -18,7 +18,7 @@ def interpolate(first: float, last: float, length: int) -> list[float]:
     return interpolated
 
 
-def filter_slice(scan: list[float]) -> list[float]:
+def interpolate_slice(scan: list[float | None]) -> list[float]:
     """Filters None values by linearinterpolation in one round scan
 
     Args:

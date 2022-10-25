@@ -1,4 +1,4 @@
-from filter_slice import filter_slice
+from filter.interpolate_slice import interpolate_slice
 
 
 tests = [
