@@ -5,12 +5,12 @@ from python.parser.serial_read import Ring
 from python.parser.invert_measurements import invert
 from python.filter.interpolate_slice import interpolate_slice
 from python.model.volume import calculate_volume
-from python.blender_vis.main import create_log
+# from python.blender_vis.main import create_log
 
 
 # Change your usb name here (ex. /dev/ttyUSB0) /dev/ttyACM1 COM6
-LEFT_PORT = 'COM6'
-RIGHT_PORT = 'COM7'
+LEFT_PORT_MASTER = 'COM4'
+RIGHT_PORT_SLAVE = 'COM3'
 BAUD_RATE = 115200
 
 # all measuremets are in millimetres
@@ -18,12 +18,12 @@ RING_RADIUS = 243
 SENSOR_NUMBER = 24
 ALPHA = 360 / SENSOR_NUMBER
 LINEAR_SPEED = 0.1
-SCAN_LIMITS = [50, 0.9 * RING_RADIUS]
+SCAN_LIMITS = [30, 60]
 
 
 # Change your usb name here (ex. /dev/ttyUSB0) /dev/ttyACM1 COM6
-left_half_master = Ring(port=LEFT_PORT, baud=BAUD_RATE, timeout=0.1)
-right_half_slave = Ring(port=RIGHT_PORT, baud=BAUD_RATE, timeout=0.1)
+left_half_master = Ring(port=LEFT_PORT_MASTER, baud=BAUD_RATE, timeout=0.1)
+right_half_slave = Ring(port=RIGHT_PORT_SLAVE, baud=BAUD_RATE, timeout=0.1)
 
 left_buf = deque()
 right_buf = deque()
@@ -35,16 +35,27 @@ left_ts = 0
 
 
 def initialization():
-    sleep(5)
+    sleep(1)
     left_half_master.process()
     right_half_slave.process()
     print("Scanning starts!")
 
 
 def main():
+    global prev_ts, left_ts
+
     # recieve data
-    left_buf.extend(left_half_master.process())
-    right_buf.extend(right_half_slave.process())
+    while not left_buf or not right_buf:
+        left_input = left_half_master.process()
+        right_input = right_half_slave.process()
+        if left_input == [[]] or right_input == [[]]:
+            sleep(0.1)
+            continue
+        left_buf.extend(left_input)
+        right_buf.extend(right_input)
+
+    # print(f"Left buf: {len(left_buf)}")
+    # print(f"Left buf: {len(right_buf)}")
 
     left_meas = []
     right_meas = []
@@ -54,7 +65,9 @@ def main():
             try:
                 *left_meas, left_ts = left_buf.popleft()
                 *right_meas, right_ts = right_buf.popleft()
-            except IndexError:
+            except (IndexError, ValueError):
+                left_meas = []
+                right_meas = []
                 break
 
             # invert data to radius (and drop outliers)
@@ -62,10 +75,6 @@ def main():
             right_meas = invert(right_meas, RING_RADIUS, SCAN_LIMITS)
             if not left_meas or not right_meas:
                 continue
-
-            # interpolate values
-            left_meas = interpolate_slice(left_meas)
-            right_meas = interpolate_slice(right_meas)
 
         # check if no log
         if not left_meas or not right_meas:
@@ -75,26 +84,43 @@ def main():
                 data,
                 lenght,
                 ALPHA,
-                is_radians=False)
-            if volume:
+                is_radians=False) * 1e-12
+            if volume > 1e-6:
                 print(f'Volume: {volume}')
-            data: list[list[float]] = []
-            delta_ts: list[float] = []
+            data.clear()
+            delta_ts.clear()
             prev_ts = left_ts
 
             # draw vizualization
-            create_log(
-                data,
-                SENSOR_NUMBER,
-                lenght
-            )
+            # create_log(
+            #     data,
+            #     SENSOR_NUMBER,
+            #     lenght
+            # )
 
         # check if new data
         if left_ts > prev_ts:
-            current_scan = left_meas[:-1] + right_meas + left_meas[-1]
-            data.append(current_scan)
-            delta_ts.append(left_ts - prev_ts)
-            prev_ts = left_ts
+            current_scan = left_meas[:-1] + right_meas + left_meas[-1:]
+            # interpolate values
+            counter = 0
+            for item in current_scan:
+                if item is not None:
+                    counter += 1
+            if counter > 3:
+                current_scan = interpolate_slice(current_scan)
+                print(f'CUR_SCAN: {current_scan}')
+                data.append(current_scan)
+                delta_ts.append(left_ts - prev_ts)
+                prev_ts = left_ts
+
+        # if left_meas or right_meas:
+        #     print(left_meas)
+        #     print(right_meas)
+        left_meas = []
+        right_meas = []
+
+    left_buf.clear()
+    right_buf.clear()
 
 
 if __name__ == '__main__':

@@ -9,5 +9,4 @@ def invert(
     for item in inverted:
         if item is not None:
             return inverted
-    else:
-        return []
+    return []
