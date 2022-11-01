@@ -5,19 +5,20 @@ from python.parser.serial_read import Ring
 from python.parser.invert_measurements import invert
 from python.filter.interpolate_slice import interpolate_slice
 from python.model.volume import calculate_volume
-from python.blender_vis.main import create_log
+# from python.blender_vis.main import create_log
 
 
 # Change your usb name here (ex. /dev/ttyUSB0) /dev/ttyACM1 COM6
-LEFT_PORT_MASTER = '/dev/ttyACM0'
-RIGHT_PORT_SLAVE = '/dev/ttyACM1'
+LEFT_PORT_MASTER = 'COM4'
+RIGHT_PORT_SLAVE = 'COM3'
 BAUD_RATE = 115200
 
 # all measuremets are in millimetres
 RING_RADIUS = 243
 SENSOR_NUMBER = 24
 ALPHA = 360 / SENSOR_NUMBER
-LINEAR_SPEED = 0.1
+LIMIT_COUNT = 4
+LINEAR_SPEED = 70
 SCAN_LIMITS = [30, 60]
 
 
@@ -32,6 +33,7 @@ data: list = []
 delta_ts: list = []
 prev_ts = 0
 left_ts = 0
+cnt = 8
 
 
 def initialization():
@@ -42,7 +44,7 @@ def initialization():
 
 
 def main():
-    global prev_ts, left_ts
+    global prev_ts, left_ts, cnt
 
     # recieve data
     while not left_buf or not right_buf:
@@ -84,23 +86,24 @@ def main():
                 data,
                 lenght,
                 ALPHA,
-                is_radians=False) * 1e-12
-            if volume > 1e-6:
-                print(f'Volume: {volume}')
-                with open("/home/s/Desktop/skoltech/design_factory/design_factory/python/blender_vis/data/groundtruth.txt", "w") as file:
+                is_radians=False) * 1e-6
+            if volume > 50:
+                cnt += 1
+                print(f'Volume: {volume:.6f} cm^3')
+                with open(f'D:\\Skoltech\\Term 5\\Design Factory\\design_factory\\python\\blender_vis\\data\\groundtruth{cnt}.txt', "w") as file:
                     for item in data:
                         file.write(' '.join(str(k) for k in item))
                         file.write('\n')
-                with open("/home/s/Desktop/skoltech/design_factory/design_factory/python/blender_vis/data/groundtruth_len.txt", "w") as file:
-                    file.write(' '.join(str(k) for k in lenght))
-                
+                with open(f'D:\\Skoltech\\Term 5\\Design Factory\\design_factory\\python\\blender_vis\\data\\groundtruth{cnt}_len.txt', "w") as file:
+                    file.write(' '.join(str(0.4 * k / LINEAR_SPEED) for k in lenght))
+
                 # draw vizualization
                 # create_log(
                 #     data,
                 #     SENSOR_NUMBER,
                 #     lenght
                 # )
-                exit()
+                # exit()
             data.clear()
             delta_ts.clear()
             prev_ts = left_ts
@@ -113,7 +116,7 @@ def main():
             for item in current_scan:
                 if item is not None:
                     counter += 1
-            if counter > 3:
+            if counter > LIMIT_COUNT:
                 current_scan = interpolate_slice(current_scan)
                 print(f'CUR_SCAN: {current_scan}')
                 data.append(current_scan)
