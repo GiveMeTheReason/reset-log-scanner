@@ -10,4 +10,4 @@ tests = [
 ]
 
 for i, test in enumerate(tests):
-    print(f'{i}:', filter_slice(test))
+    print(f'{i}:', interpolate_slice(test))

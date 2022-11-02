@@ -1,11 +1,11 @@
 from collections import deque
 from time import sleep
 
-from python.parser.serial_read import Ring
-from python.parser.invert_measurements import invert
-from python.filter.interpolate_slice import interpolate_slice
-from python.model.volume import calculate_volume
-# from python.blender_vis.main import create_log
+from py3.parser.serial_read import Ring
+from py3.parser.invert_measurements import invert
+from py3.filter.interpolate_slice import interpolate_slice
+from py3.model.volume import calculate_volume
+# from py3.blender_vis.main import create_log
 
 
 # Change your usb name here (ex. /dev/ttyUSB0) /dev/ttyACM1 COM6
