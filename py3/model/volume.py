@@ -1,8 +1,9 @@
+import typing as tp
 import math
 
 
 def calculate_volume(
-    points_scans: list,
+    points_scans: tp.List,
     length: float,
     alpha: float = 15,
     is_radians: bool = False

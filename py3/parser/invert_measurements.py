@@ -1,8 +1,11 @@
+import typing as tp
+
+
 def invert(
-    scan: list,
+    scan: tp.List,
     radius: float,
-    limits: list
-) -> list:
+    limits: tp.List
+) -> tp.List:
     inverted = [radius - measurement if
                 (limits[0] <= radius - measurement <= limits[1])
                 else None for measurement in scan]

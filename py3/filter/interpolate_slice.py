@@ -1,7 +1,8 @@
+import typing as tp
 from itertools import chain
 
 
-def interpolate(first: float, last: float, length: int) -> list:
+def interpolate(first: float, last: float, length: int) -> tp.List:
     """Interpolates values from start to end over length
 
     Args:
@@ -18,7 +19,7 @@ def interpolate(first: float, last: float, length: int) -> list:
     return interpolated
 
 
-def interpolate_slice(scan: list) -> list:
+def interpolate_slice(scan: tp.List) -> tp.List:
     """Filters None values by linearinterpolation in one round scan
 
     Args:
