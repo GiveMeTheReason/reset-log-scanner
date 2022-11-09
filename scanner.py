@@ -15,6 +15,8 @@ from py3.model.volume import calculate_volume
 # Change your usb name here (ex. /dev/ttyUSB0) /dev/ttyACM1 COM6
 LEFT_PORT_MASTER = '/dev/ttyACM0'
 RIGHT_PORT_SLAVE = '/dev/ttyACM1'
+LEFT_PORT_MASTER = 'COM4'
+RIGHT_PORT_SLAVE = 'COM3'
 BAUD_RATE = 115200
 
 # all measuremets are in millimetres
@@ -22,11 +24,12 @@ RING_RADIUS = 243
 SENSOR_NUMBER = 24
 ALPHA = 360 / SENSOR_NUMBER
 LINEAR_SPEED = 0.1
-SCAN_LIMITS = [30, 60]
+SCAN_LIMITS = [-10000000, 10000000]
+SCAN_LIMITS = [30, 80]
 
 
 # logger
-log_files = sorted(glob.glob('logs/*_*_log.txt'))
+log_files = sorted(glob.glob('logs/*_*.log'))
 log_file_num = '000'
 if log_files:
     log_file_num = str(int(log_files[-1][5:8]) + 1).zfill(3)
@@ -41,11 +44,15 @@ conf = {
                              'formatter': 'custom',
                              'level': 'INFO',
                              'mode': 'a'},
-                'to_stdout': {'class': 'logging.StreamHandler',
-                              'formatter': 'custom',
-                              'level': 'INFO',
-                              'stream': 'ext://sys.stdout'}},
-    'root': {'handlers': ['to_stdout', 'to_file'], 'level': 'INFO'},
+                # 'to_stdout': {'class': 'logging.StreamHandler',
+                #               'formatter': 'custom',
+                #               'level': 'INFO',
+                #               'stream': 'ext://sys.stdout'},
+                },
+    'root': {'handlers': [
+        # 'to_stdout',
+        'to_file'
+    ], 'level': 'INFO'},
 }
 logging.config.dictConfig(conf)
 
@@ -62,7 +69,7 @@ delta_ts: tp.List = []
 prev_ts: int = 0
 left_ts: int = 0
 
-scan_num = len(glob.glob('data/scans/scan_*.txt'))
+scan_num = len(glob.glob('data/scans/scan_*.txt')) // 2
 
 
 def initialization():
@@ -86,7 +93,7 @@ def main():
         right_buf.extend(right_input)
 
     # logging.info(f'Left buf: {len(left_buf)}')
-    # logging.info(f'Left buf: {len(right_buf)}')
+    # logging.info(f'Right buf: {len(right_buf)}')
 
     left_meas = []
     right_meas = []
@@ -102,7 +109,7 @@ def main():
                 break
 
             # record scan
-            logging.info(left_meas, right_meas)
+            logging.info(f'Measurements: {left_meas[:-1] + right_meas + left_meas[-1:]}')
 
             # invert data to radius (and drop outliers)
             left_meas = invert(left_meas, RING_RADIUS, SCAN_LIMITS)
@@ -118,9 +125,10 @@ def main():
                 data,
                 lenght,
                 ALPHA,
-                is_radians=False) * 1e-12
-            if volume > 1e-6:
+                is_radians=False) * 1e-6
+            if volume > 1:
                 logging.info(f'Volume: {volume:.6f}')
+                print(volume)
                 with open(f'data/scans/scan_{str(scan_num).zfill(3)}.txt', 'w') as file:
                     for item in data:
                         file.write(' '.join(str(k) for k in item))
@@ -135,7 +143,7 @@ def main():
                 #     SENSOR_NUMBER,
                 #     lenght
                 # )
-                exit()
+                # exit()
             data.clear()
             delta_ts.clear()
             prev_ts = left_ts
@@ -156,8 +164,8 @@ def main():
                 prev_ts = left_ts
 
         # if left_meas or right_meas:
-        #     logging.info(left_meas)
-        #     logging.info(right_meas)
+        #     logging.info(f'Left: {left_meas})
+        #     logging.info(f'Right: {right_meas})
         left_meas = []
         right_meas = []
 
