@@ -4,7 +4,7 @@ import math
 
 def calculate_volume(
     points_scans: tp.List,
-    length: float,
+    length: tp.Union[float, tp.List[float]],
     alpha: float = 15,
     is_radians: bool = False
 ) -> float:
