@@ -4,10 +4,6 @@ import numpy as np
 import bpy
 
 
-def deg2rad(angle):
-    return angle * math.pi / 180
-
-
 def add_mesh(name, verts, faces=None, edges=None, col_name="Collection"):
     if edges is None:
         edges = []
@@ -33,8 +29,8 @@ def create_log(data, num_of_sensors, lenght):
     for layer_num, item in enumerate(data):
         for i, dist in enumerate(item):
             x = lenght[layer_num] * layer_num
-            y = dist * math.sin(deg2rad(15 + 15 * i))
-            z = dist * math.cos(deg2rad(15 + 15 * i))
+            y = dist * math.sin(math.radians(15 + 15 * i))
+            z = dist * math.cos(math.radians(15 + 15 * i))
             verts.append([x, y, z])
 
     faces = []

@@ -69,7 +69,10 @@ delta_ts: tp.List = []
 prev_ts: int = 0
 left_ts: int = 0
 
-scan_num = len(glob.glob('data/scans/scan_*.txt')) // 2
+scan_files = sorted(glob.glob('data/scans/scan_[0-9]*.txt'))
+scan_num = '000'
+if scan_files:
+    scan_num = int(scan_files[-1][16:19]) + 1
 
 
 def initialization():
@@ -125,8 +128,8 @@ def main():
                 data,
                 lenght,
                 ALPHA,
-                is_radians=False) * 1e-6
-            if volume > 1:
+                is_radians=False) * 1e-3  # to cm^3
+            if volume > 1000:
                 logging.info(f'Volume: {volume:.6f}')
                 print(volume)
                 with open(f'data/scans/scan_{str(scan_num).zfill(3)}.txt', 'w') as file:
