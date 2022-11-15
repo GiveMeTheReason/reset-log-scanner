@@ -5,6 +5,8 @@ import math
 
 from itertools import accumulate
 
+import numpy as np
+
 
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.getcwd()))
 SCANS_RELATIVE_DIR = os.path.join('data', 'scans')
@@ -56,3 +58,26 @@ def create_log(data, lenght, num_of_sensors):
             ])
 
     return verts, faces
+
+
+class KalmanFilter():
+    def __init__(self, num_of_sensors, R, Q):
+        self.R = R
+        self.Q = Q
+
+        self.num_of_sensors = num_of_sensors
+        self.mu = np.ones(num_of_sensors) * 70
+        self.sigma = np.ones(num_of_sensors) * self.R
+
+    def predict(self):
+        self.mu = self.mu
+        self.sigma = self.sigma + self.R
+
+    def correct(self, obs):
+        obs = np.array(obs)
+
+        K = self.sigma * (1 / (self.sigma + self.Q))
+        self.mu = self.mu + K * (obs - self.mu)
+        self.sigma = (1 - K) * self.sigma
+
+        return self.mu.tolist(), K.tolist()
