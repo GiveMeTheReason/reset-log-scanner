@@ -193,6 +193,3 @@ cython_debug/
 *.exe
 *.out
 *.app
-
-# scans
-scan_*.txt
